@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
+import joblib
 # -------------------------
 # Page Config
 # -------------------------
@@ -13,7 +13,8 @@ st.title(" Telecom Customer Churn Analysis Dashboard")
 # Load Data
 # -------------------------
 df = pd.read_csv("Data/telco.csv")
-
+model = joblib.load("churn_randfor_model.pkl")
+model_cols = joblib.load("features.pkl")
 # -------------------------
 # KPI Metrics
 # -------------------------
@@ -164,7 +165,35 @@ fig8 = px.scatter_mapbox(
 
 fig8.update_layout(mapbox_style="open-street-map")
 
+
+
 st.plotly_chart(fig8, use_container_width=True)
+
+# -------------------------
+# Feature Importance
+# -------------------------
+st.subheader("Top Features Driving Customer Churn")
+
+importances = model.feature_importances_
+
+feature_df = pd.DataFrame({
+    "Feature": model_cols,
+    "Importance": importances
+}).sort_values(by="Importance", ascending=False)
+
+top_features = feature_df.sort_values("Importance", ascending=False).head(10)
+fig_imp = px.bar(
+    top_features,
+    x="Importance",
+    y="Feature",
+    orientation="h",
+    title="Top 10 Important Features",
+    color="Importance"
+)
+
+fig_imp.update_layout(yaxis=dict(autorange="reversed"))
+
+st.plotly_chart(fig_imp, use_container_width=True)
 
 # -------------------------
 # Raw Data
